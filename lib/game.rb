@@ -1,3 +1,5 @@
+require 'json'
+
 class Game
 
   #getters and setters
@@ -5,7 +7,7 @@ class Game
 
   def initialize
       @tries_left = 6
-      @secret_word
+      @secret_word = get_word.sample
       @guessed_letters = []
   end
 
@@ -27,7 +29,8 @@ class Game
   def user_input
     print "Your guess letter: "
     input = gets.chomp.downcase
-    until input.length == 1 && input >= 'a' && input <= 'z' && !guessed_letters.include?(input) do
+
+    until input == "save" || input.length == 1 && input >= 'a' && input <= 'z' && !guessed_letters.include?(input) do
       if guessed_letters.include?(input)
         print "You chose this letter in another turn. Enter again: "
         input = gets.chomp.downcase
@@ -60,15 +63,42 @@ class Game
     puts "Remaining Tries: #{tries_left} "
   end
 
+  def display_result_message
+    if tries_left == 0
+      puts "You lose. The word was: #{secret_word}"
+      puts "---------- GAME OVER ----------"
+    else 
+      puts "Congratulations! YOU WON!"
+    end
+  end
+
+  def save_game
+    file = File.open("data/save-file.txt", "w+")
+    state = {secret_word: secret_word, tries_left: tries_left, guessed_letters: guessed_letters}
+    file.write(JSON.generate(state))
+    file.close()
+  end
+
+  def load_game
+    file = File.open("data/save-file.txt", "r")
+    json = file.read
+    state =JSON.parse(json, symbolize_names: true)
+    file.close
+    state
+  end
+
   def play
 
-    self.secret_word = get_word.sample
     result = []
     wrong_guesses = []
 
     until tries_left == 0 || result.join == secret_word do
 
       letter = user_input
+      if letter == "save"
+        save_game
+        break
+      end
       self.guessed_letters << letter
 
       result = display_word
@@ -79,12 +109,7 @@ class Game
       display_remaining_turns(wrong_guesses)
     end
 
-    if tries_left == 0
-      puts "You lose... GAME OVER"
-      puts "The word was: #{secret_word}"
-    else
-      puts "You WIN!"
-    end
+    display_result_message
   end  
   
 end
