@@ -9,6 +9,21 @@ class Game
       @guessed_letters = []
   end
 
+  def get_word
+    words_array = []
+    path = "data/google-10000-english-no-swears.txt"
+    file = File.open(path, "r")
+    for line in file.readlines()
+      word = line.chomp
+      if word.length >= 5 && word.length <= 12
+        words_array << word
+      end
+    end
+    file.close
+
+    words_array
+  end
+
   def user_input
     print "Your guess letter: "
     input = gets.chomp.downcase
@@ -47,7 +62,7 @@ class Game
 
   def play
 
-    self.secret_word = "derived"
+    self.secret_word = get_word.sample
     result = []
     wrong_guesses = []
 
@@ -66,6 +81,7 @@ class Game
 
     if tries_left == 0
       puts "You lose... GAME OVER"
+      puts "The word was: #{secret_word}"
     else
       puts "You WIN!"
     end
